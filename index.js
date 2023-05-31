@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
-const app  = express()
-const port = process.env.PORT || 5000 ; 
+const app = express()
+const port = process.env.PORT || 5000;
 require('dotenv').config()
 
 // midleware 
@@ -30,43 +30,64 @@ async function run() {
     const menuCollection = client.db('bistroBoss').collection('menu')
     const reviewsCollection = client.db('bistroBoss').collection('reviews')
     const cartsCollection = client.db('bistroBoss').collection('carts')
+    const userCollection = client.db('bistroBoss').collection('user')
 
     // menu 
-    app.get('/menu', async(req,res)=> {
+    app.get('/menu', async (req, res) => {
       const result = await menuCollection.find().toArray()
       res.send(result)
     })
     // reviews
-    app.get('/reviews', async(req,res)=> {
+    app.get('/reviews', async (req, res) => {
       const result = await reviewsCollection.find().toArray()
       res.send(result)
     })
 
-    // cart
-  
-    app.get('/carts',async(req, res)=> {
+
+
+    // cart collection 
+
+    app.get('/carts', async (req, res) => {
       const email = req.query.email;
       console.log(email);
-      if(!email){
+      if (!email) {
         res.send([]);
       }
-      const query = {Useremail : email}
+      const query = { Useremail: email }
       const result = await cartsCollection.find(query).toArray();
       res.send(result);
     })
 
-    app.post('/carts',async(req,res)=> {
+    app.post('/carts', async (req, res) => {
       const item = req.body;
       const result = await cartsCollection.insertOne(item);
       res.send(result)
     })
 
-    app.delete('/carts/:id', async(req, res)=> {
+    app.delete('/carts/:id', async (req, res) => {
       const id = req.params.id
-      const query = {foodId : id}
+      const query = { foodId: id }
       const result = await cartsCollection.deleteOne(query)
       res.send(result)
     })
+
+    // user collection 
+    app.post('/users', async (req, res) => {
+      const user = req.body;
+      // console.log(user.email);
+      const query = { email: user.email }
+      const existingUser = await userCollection.findOne(query)
+      // console.log('existing user', existingUser);
+      if (existingUser) {
+        res.send({ message: 'user already exist' })
+      }
+      else {
+        const result = await userCollection.insertOne(user);
+        res.send(result)
+      }
+
+    })
+
 
 
 
@@ -84,10 +105,10 @@ run().catch(console.dir);
 
 
 
-app.get('/', (req, res)=> {
-    res.send('bistro is running ')
+app.get('/', (req, res) => {
+  res.send('bistro is running ')
 })
 
-app.listen(port, ()=> {
-    console.log(port , "port is okay");
+app.listen(port, () => {
+  console.log(port, "port is okay");
 })
