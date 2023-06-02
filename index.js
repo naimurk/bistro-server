@@ -58,17 +58,17 @@ async function run() {
 
 
     // TOKEN CREATE API
-   try {
-    app.post('/jwt', (req, res) => {
-      const user = req.body;
-      // console.log(user);
-      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
-      res.send({ token })
-    })
-    
-   } catch (error) {
-    res.send(error)
-   }
+    try {
+      app.post('/jwt', (req, res) => {
+        const user = req.body;
+        // console.log(user);
+        const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+        res.send({ token })
+      })
+
+    } catch (error) {
+      res.send(error)
+    }
 
 
     // menu 
@@ -78,11 +78,11 @@ async function run() {
         const result = await menuCollection.find().toArray()
         res.send(result)
       })
-      
+
     } catch (error) {
 
       res.send(error)
-      
+
     }
 
 
@@ -92,7 +92,7 @@ async function run() {
         const result = await reviewsCollection.find().toArray()
         res.send(result)
       })
-    } 
+    }
     catch (error) {
       res.send(error)
     }
@@ -114,25 +114,25 @@ async function run() {
         }
         else {
           const query = { Useremail: email }
-        const result = await cartsCollection.find(query).toArray();
-        res.send(result);
+          const result = await cartsCollection.find(query).toArray();
+          res.send(result);
         }
       })
     } catch (error) {
       res.send(error)
     }
-   
 
 
-   try {
-    app.post('/carts', async (req, res) => {
-      const item = req.body;
-      const result = await cartsCollection.insertOne(item);
-      res.send(result)
-    })
-   } catch (error) {
-    res.send(error)
-   }
+
+    try {
+      app.post('/carts', async (req, res) => {
+        const item = req.body;
+        const result = await cartsCollection.insertOne(item);
+        res.send(result)
+      })
+    } catch (error) {
+      res.send(error)
+    }
 
     app.delete('/carts/:id', async (req, res) => {
       const id = req.params.id
@@ -142,86 +142,79 @@ async function run() {
     })
 
     // ----------user collection ----------------//
-  
-   try {
-    app.post('/users', async (req, res) => {
-      
 
-      const user = req.body;
-    // console.log(user.email);
-    const query = { email: user.email }
-    const existingUser = await userCollection.findOne(query)
-    // console.log('existing user', existingUser);
-    if (existingUser) {
-      res.send({ message: 'user already exist' })
-    }
-    else {
-      const result = await userCollection.insertOne(user);
-      res.send(result)
-    }
-      
-     
+    try {
+      app.post('/users', async (req, res) => {
 
-  })
-   }
+
+        const user = req.body;
+        // console.log(user.email);
+        const query = { email: user.email }
+        const existingUser = await userCollection.findOne(query)
+        // console.log('existing user', existingUser);
+        if (existingUser) {
+          res.send({ message: 'user already exist' })
+        }
+        else {
+          const result = await userCollection.insertOne(user);
+          res.send(result)
+        }
+
+
+
+      })
+    }
     catch (error) {
-    res.send(error)
-   }
+      res.send(error)
+    }
 
     app.get('/all-users', async (req, res) => {
       const result = await userCollection.find().toArray()
       res.send(result)
     })
 
+
+
     // (_________ is Admin apis_______)
-   try {
-    app.get('/users/isAdmin/:email', verifyJwt, async (req, res) => {
-      const email = req.params?.email;
-      console.log('decoded email',req.decoded.email);
-      console.log(email);
-     
-     if (email) {
+    app.get('/users/admin/:email', verifyJwt, async (req, res) => {
+     try {
 
+      const email = req.params.email;
       if (req.decoded.email !== email) {
-        res.send({ admin: false })
+        res.send({ admin: false });
       }
-
-     else {
-      const query = { email: email }
-      const user = await userCollection.findOne(query)
-      const result = { admin: user?.email == 'Admin' }
+      const query = { email: email };
+      const user = await userCollection.findOne(query);
+      const result = { admin: user?.role === 'Admin' };
+      // console.log(result);
       res.send(result)
+      
+     } catch (error) {
+      res.send(error.name, error.message)
      }
-     }
-
-     else {
-      res.send({email : 'email not found'})
-     }
-
-
     })
-   } catch (error) {
-    res.send(error)
-   }
+
+
+
 
     // make user admin ;
-   try {
-    app.patch('/users/admin/:id', async (req, res) => {
-      const id = req.params.id;
-      const filter = { _id: new ObjectId(id) }
-      const updateDoc = {
-        $set: {
-          role: 'Admin'
+    try {
+      app.patch('/users/admin/:id', async (req, res) => {
+        const id = req.params.id;
+        const filter = { _id: new ObjectId(id) }
+        const updateDoc = {
+          $set: {
+            role: 'Admin'
+          }
         }
-      }
-      const result = await userCollection.updateOne(filter, updateDoc);
-      res.send(result)
+        const result = await userCollection.updateOne(filter, updateDoc);
+        res.send(result)
 
-    })
+      })
 
-   } catch (error) {
-    res.send(error)
-   }
+    } catch (error) {
+      res.send(error)
+    }
 
 
 
