@@ -85,6 +85,19 @@ async function run() {
 
     }
 
+    app.post('/menu', verifyJwt, async(req,res)=> {
+         const newItem = req.body;
+         const result = await menuCollection.insertOne(newItem)
+         res.send(result);
+    })
+
+    app.delete('/menu/:id', verifyJwt , async (req, res)=> {
+        const id = req.params.id;
+        const query = {_id: new ObjectId(id)};
+        const result = await menuCollection.deleteOne(query);
+        res.send(result)
+    })
+
 
     // reviews
     try {
@@ -173,7 +186,7 @@ async function run() {
       res.send(result)
     })
 
-
+ 
 
     // (_________ is Admin apis_______)
     app.get('/users/admin/:email', verifyJwt, async (req, res) => {
