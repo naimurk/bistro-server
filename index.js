@@ -258,9 +258,11 @@ async function run() {
 
 // payment post 
 app.post('/payment', async (req, res)=> {
-  const item = req.body
-  const result = await paymentsCollection.insertOne(item)
-  res.send(result)
+  const payment = req.body
+  const result = await paymentsCollection.insertOne(payment)
+  const query = {_id : {$in : payment.itemId.map(id => new ObjectId(id))}}
+  const resultTwo = await cartsCollection.deleteMany(query)
+  res.send({result,resultTwo})
 })
 
     
