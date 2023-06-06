@@ -4,6 +4,7 @@ const app = express()
 const port = process.env.PORT || 5000;
 require('dotenv').config()
 const jwt = require('jsonwebtoken');
+const stripe = require("stripe")('sk_test_51NFV1sCJxnWqbAIJfVOOrL4GqlS9x7P1Wk45p0GZu3Tuokk1GtY9Y5SMukFBJrVbRmnMxhfFAfjfbSNy0mM1Gqmf00UkaWgpKH')
 
 // midleware 
 app.use(cors())
@@ -55,6 +56,7 @@ async function run() {
     const reviewsCollection = client.db('bistroBoss').collection('reviews')
     const cartsCollection = client.db('bistroBoss').collection('carts')
     const userCollection = client.db('bistroBoss').collection('user')
+    const paymentsCollection = client.db('bistroBoss').collection('payments')
 
 
     // TOKEN CREATE API
@@ -207,7 +209,7 @@ async function run() {
      }
     })
 
-
+  
 
 
     // make user admin ;
@@ -228,6 +230,40 @@ async function run() {
     } catch (error) {
       res.send(error)
     }
+
+    // create card payment intent 
+   app.post('/create-payment-intent', verifyJwt, async (req, res) => {
+  try {
+    const {price} = req.body;
+    if(price){
+      console.log(price);
+    const amount = 100 * price;
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: amount,
+      currency: 'usd',
+      payment_method_types: ["card"]
+    });
+
+    res.send({ clientSecret: paymentIntent.client_secret });
+    }
+    else{
+      res.send('taka ase nai')
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ error: 'An error occurred' });
+  }
+});
+
+
+// payment post 
+app.post('/payment', async (req, res)=> {
+  const item = req.body
+  const result = await paymentsCollection.insertOne(item)
+  res.send(result)
+})
+
+    
 
 
 
